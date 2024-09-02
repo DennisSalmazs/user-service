@@ -1,6 +1,6 @@
 package com.teambridge.service;
 
-import com.cydeo.dto.UserDTO;
+import com.teambridge.dto.UserDTO;
 
 public interface KeycloakService {
 
