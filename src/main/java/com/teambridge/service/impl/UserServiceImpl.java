@@ -128,14 +128,14 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    //check if Manager has any projects, if yes, do not delete user
+    //check if Manager has any non-completed projects, if yes, do not delete user
     private void checkManagerConnections(String username) {
 
         //TODO Get the needed information from project-service
 
     }
 
-    //check if Employee has any tasks, if yes, do not delete user
+    //check if Employee has any non-completed tasks, if yes, do not delete user
     private void checkEmployeeConnections(String username) {
 
         //TODO Get the needed information from task-service
