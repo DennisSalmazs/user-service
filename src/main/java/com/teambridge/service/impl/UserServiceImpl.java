@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService {
 
         User userToSave = mapperUtil.convert(userDTO, new User());
 
-        keycloakService.userCreate(userDTO);
+        //keycloakService.userCreate(userDTO);
         User savedUser = userRepository.save(userToSave);
 
         return mapperUtil.convert(savedUser, new UserDTO());
@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
 
         User userToUpdate = mapperUtil.convert(userDTO, new User());
 
-        keycloakService.userUpdate(userDTO);
+        //keycloakService.userUpdate(userDTO);
         User updatedUser = userRepository.save(userToUpdate);
 
         return mapperUtil.convert(updatedUser, new UserDTO());
@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
         userToDelete.setUserName(username + "-" + userToDelete.getId());
         userToDelete.setIsDeleted(true);
 
-        keycloakService.delete(username);
+        //keycloakService.delete(username);
         userRepository.save(userToDelete);
 
     }
