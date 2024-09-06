@@ -4,6 +4,7 @@ import com.teambridge.config.KeycloakProperties;
 import com.teambridge.dto.UserDTO;
 import com.teambridge.exception.UserNotFoundException;
 import com.teambridge.service.KeycloakService;
+import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -11,6 +12,7 @@ import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.core.Response;
@@ -27,6 +29,16 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     public KeycloakServiceImpl(KeycloakProperties keycloakProperties) {
         this.keycloakProperties = keycloakProperties;
+    }
+
+    @Override
+    public String getAccessToken() {
+        KeycloakAuthenticationToken keycloakAuthenticationToken = getAuthenticationToken();
+        return "Bearer " + keycloakAuthenticationToken.getAccount().getKeycloakSecurityContext().getTokenString();
+    }
+
+    private KeycloakAuthenticationToken getAuthenticationToken() {
+        return (KeycloakAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
     }
 
     @Override

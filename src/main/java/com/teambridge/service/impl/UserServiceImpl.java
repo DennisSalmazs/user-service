@@ -1,17 +1,22 @@
 package com.teambridge.service.impl;
 
+import com.teambridge.client.ProjectClient;
+import com.teambridge.client.TaskClient;
+import com.teambridge.dto.ProjectResponse;
+import com.teambridge.dto.TaskResponse;
 import com.teambridge.dto.UserDTO;
 import com.teambridge.entity.User;
-import com.teambridge.exception.UserAlreadyExistsException;
-import com.teambridge.exception.UserNotFoundException;
+import com.teambridge.exception.*;
 import com.teambridge.repository.UserRepository;
 import com.teambridge.service.KeycloakService;
 import com.teambridge.service.UserService;
 import com.teambridge.util.MapperUtil;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -21,11 +26,18 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final MapperUtil mapperUtil;
     private final KeycloakService keycloakService;
+    private final ProjectClient projectClient;
+    private final TaskClient taskClient;
 
-    public UserServiceImpl(UserRepository userRepository, MapperUtil mapperUtil, KeycloakService keycloakService) {
+    public UserServiceImpl(UserRepository userRepository,
+                           MapperUtil mapperUtil,
+                           KeycloakService keycloakService,
+                           ProjectClient projectClient, TaskClient taskClient) {
         this.userRepository = userRepository;
         this.mapperUtil = mapperUtil;
         this.keycloakService = keycloakService;
+        this.projectClient = projectClient;
+        this.taskClient = taskClient;
     }
 
     @Override
@@ -41,7 +53,7 @@ public class UserServiceImpl implements UserService {
 
         User userToSave = mapperUtil.convert(userDTO, new User());
 
-        //keycloakService.userCreate(userDTO);
+        keycloakService.userCreate(userDTO);
         User savedUser = userRepository.save(userToSave);
 
         return mapperUtil.convert(savedUser, new UserDTO());
@@ -81,7 +93,7 @@ public class UserServiceImpl implements UserService {
 
         User userToUpdate = mapperUtil.convert(userDTO, new User());
 
-        //keycloakService.userUpdate(userDTO);
+        keycloakService.userUpdate(userDTO);
         User updatedUser = userRepository.save(userToUpdate);
 
         return mapperUtil.convert(updatedUser, new UserDTO());
@@ -96,7 +108,7 @@ public class UserServiceImpl implements UserService {
         userToDelete.setUserName(username + "-" + userToDelete.getId());
         userToDelete.setIsDeleted(true);
 
-        //keycloakService.delete(username);
+        keycloakService.delete(username);
         userRepository.save(userToDelete);
 
     }
@@ -130,18 +142,32 @@ public class UserServiceImpl implements UserService {
 
     //check if Manager has any non-completed projects, if yes, do not delete user
     private void checkManagerConnections(String username) {
-
-        //TODO Get the needed information from project-service
-
+        Integer projectCount = 0;
+        ResponseEntity<ProjectResponse> projectResponse =
+                projectClient.getNonCompletedCountByAssignedManager(username);
+        if (Objects.requireNonNull(projectResponse.getBody()).isSuccess()) {
+            projectCount = projectResponse.getBody().getData();
+        } else {
+            throw new ProjectCountNotRetrievedException("Project count cannot be retrieved.");
+        }
+        if (projectCount > 0) {
+            throw new UserCanNotBeDeletedException("User cannot be deleted. User is linked to project(s)");
+        }
     }
 
     //check if Employee has any non-completed tasks, if yes, do not delete user
     private void checkEmployeeConnections(String username) {
-
-        //TODO Get the needed information from task-service
-
+        Integer taskCount = 0;
+        ResponseEntity<TaskResponse> taskResponse =
+                taskClient.getNonCompletedCountByAssignedEmployee(username);
+        if (Objects.requireNonNull(taskResponse.getBody()).isSuccess()) {
+            taskCount = taskResponse.getBody().getData();
+        } else {
+            throw new TaskCountNotRetrievedException("Task count cannot be retrieved.");
+        }
+        if (taskCount > 0) {
+            throw new UserCanNotBeDeletedException("User cannot be deleted. User is linked to task(s)");
+        }
     }
-
-    //TODO Extract the authorization token from the original request and add it to the request sent to next microservice
 
 }
