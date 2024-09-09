@@ -34,7 +34,26 @@ master:
   client: master-client
 
 eureka:
+  instance:
+    preferIpAddress: true
+    ipAddress: 127.0.0.1
+    status-page-url-path: ${management.context-path}/info
+    health-check-url-path: ${management.context-path}/health
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
 
+management:
+  endpoint:
+    health:
+      show-details: "ALWAYS"
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  context-path: http://localhost:${server.port}/actuator
+
+info:
+  application:
+    name: user-service
+    description: Teambridge Application User Service
